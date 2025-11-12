@@ -12,20 +12,21 @@ CREATE TABLE items (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
     description TEXT,
-    price DECIMAL NOT NULL,
+    price DOUBLE PRECISION NOT NULL,
     stock INTEGER NOT NULL
 );
 
 -- Create carts table
 CREATE TABLE carts (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id)
+    user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Create cart_items table
 CREATE TABLE cart_items (
     id SERIAL PRIMARY KEY,
-    cart_id INTEGER REFERENCES carts(id),
-    item_id INTEGER REFERENCES items(id),
-    quantity INTEGER NOT NULL
+    cart_id INTEGER NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    UNIQUE(cart_id, item_id)
 );

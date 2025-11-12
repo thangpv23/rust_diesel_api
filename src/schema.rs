@@ -3,8 +3,8 @@
 diesel::table! {
     cart_items (id) {
         id -> Int4,
-        cart_id -> Nullable<Int4>,
-        item_id -> Nullable<Int4>,
+        cart_id -> Int4,
+        item_id -> Int4,
         quantity -> Int4,
     }
 }
@@ -21,7 +21,7 @@ diesel::table! {
         id -> Int4,
         name -> Varchar,
         description -> Nullable<Text>,
-        price -> Numeric,
+        price -> Float8,
         stock -> Int4,
     }
 }

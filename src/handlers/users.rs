@@ -1,4 +1,3 @@
-// User handlers: registration, login, etc.
 use warp::{Reply, Rejection};
 use crate::db::DbPool;
 use crate::models::user::User;

@@ -1,88 +1,98 @@
-// Cart handlers
+// Cart handlers – 1 cart per user, auto-managed via JWT user_id
+
 use warp::{Reply, Rejection};
-use crate::db::DbPool;
-// Add models, diesel, serde as needed
-use crate::models::cart::Cart;
-use crate::models::cart::NewCart;
-use crate:: models::cart::CartItem;
-use crate:: models::cart::NewCartItem;
+use crate::db::connection::DbPool;
+use crate::models::cart::{Cart, NewCart, CartItem, NewCartItem};
+use crate::schema::carts::dsl::{carts, id as cart_id, user_id as cart_user_id};    
+use crate::schema::cart_items::dsl::{cart_items, cart_id as ci_cart_id, item_id as ci_item_id}; 
 use diesel::prelude::*;
+use serde::Deserialize;
+use serde_json::json;
 
-
-pub async fn create_cart(pool: DbPool, uid: i32) -> Result<impl Reply, Rejection> {
-    // Implement logic
-    use crate::schema::carts::dsl::*;
-    let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
-
-    let new_cart = NewCart {
-        user_id: uid,
-    };
-
-    diesel::insert_into(carts)
-        .values(&new_cart)
-        .execute(&mut conn)
-        .map_err(|_| warp::reject::reject())?;
-
-    Ok(warp::reply::json(&"Cart created"))
+#[derive(Deserialize)]
+pub struct AddToCart {
+    pub item_id: i32,
+    pub quantity: i32,
 }
 
-pub async fn add_item_to_cart(pool: DbPool, add_cart_id: i32, add_item_id: i32, add_quantity: i32) -> Result<impl Reply, Rejection> {
-    // Implement logic to add item to cart
-     use crate::schema::cart_items::dsl::*;
+// Helper: Get or create cart for user
+async fn get_or_create_cart(conn: &mut PgConnection, uid: i32) -> Result<i32, diesel::result::Error> {
+    let existing_cart_id: Option<i32> = carts
+        .filter(cart_user_id.eq(uid))
+        .select(cart_id)  
+        .first(conn)
+        .optional()?;
+
+    if let Some(id) = existing_cart_id {
+        return Ok(id);
+    }
+
+    // Create new cart
+    let new_cart = NewCart { user_id: uid };
+    let new_id: i32 = diesel::insert_into(carts)
+        .values(&new_cart)
+        .returning(cart_id) 
+        .get_result(conn)?;
+
+    Ok(new_id)
+}
+
+pub async fn add_to_cart(
+    user_id: i32,
+    pool: DbPool,
+    body: AddToCart,
+) -> Result<impl Reply, Rejection> {
     let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
-    
-    let new_cart_item = NewCartItem {
-        cart_id : add_cart_id,
-        item_id : add_item_id,
-        quantity : add_quantity,
+    let cart_result_id = get_or_create_cart(&mut conn, user_id)
+        .await
+        .map_err(|_| warp::reject::reject())?;
+
+    let new_item = NewCartItem {
+        cart_id: cart_result_id,
+        item_id: body.item_id,
+        quantity: body.quantity,
     };
 
     diesel::insert_into(cart_items)
-        .values(&new_cart_item)
+        .values(&new_item)
+        .on_conflict((ci_cart_id, ci_item_id))
+        .do_update()
+        .set(crate::schema::cart_items::dsl::quantity.eq(crate::schema::cart_items::dsl::quantity + body.quantity))
         .execute(&mut conn)
         .map_err(|_| warp::reject::reject())?;
 
-    Ok(warp::reply::json(&"Item added to cart"))
+    Ok(warp::reply::json(&json!({ "message": "Item added to cart" })))
 }
 
-pub async fn remove_cart(pool: DbPool, cart_id: i32) -> Result<impl Reply, Rejection> {
-    use crate::schema::carts::dsl::*;
+pub async fn view_cart(user_id: i32, pool: DbPool) -> Result<impl Reply, Rejection> {
     let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
-
-    diesel::delete(carts.filter(id.eq(cart_id)))
-        .execute(&mut conn)
+    let cart_result_id = get_or_create_cart(&mut conn, user_id)
+        .await
         .map_err(|_| warp::reject::reject())?;
 
-    Ok(warp::reply::json(&"Cart removed"))
+    let items = cart_items
+        .filter(ci_cart_id.eq(cart_result_id))  
+        .load::<CartItem>(&mut conn)
+        .map_err(|_| warp::reject::reject())?;
+
+    Ok(warp::reply::json(&items))
 }
 
-pub async fn remove_cart_item(pool: DbPool, remove_cart_id: i32, remove_item_id: i32) -> Result<impl Reply, Rejection> {
-    use crate::schema::cart_items::dsl::*;
+pub async fn remove_from_cart(
+    user_id: i32,
+    item_id: i32,
+    pool: DbPool,
+) -> Result<impl Reply, Rejection> {
     let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
+    let cart_result_id = get_or_create_cart(&mut conn, user_id)
+        .await
+        .map_err(|_| warp::reject::reject())?;
 
     diesel::delete(
-        cart_items.filter(
-            cart_id.eq(remove_cart_id).and(item_id.eq(remove_item_id))
-        )
+        cart_items.filter(ci_cart_id.eq(cart_result_id).and(ci_item_id.eq(item_id)))
     )
     .execute(&mut conn)
     .map_err(|_| warp::reject::reject())?;
 
-    Ok(warp::reply::json(&"Item removed from cart"))
-}
-
-pub async fn edit_cart_item(pool: DbPool, edit_cart_id: i32, edit_item_id: i32, new_quantity: i32) -> Result<impl Reply, Rejection> {
-    use crate::schema::cart_items::dsl::*;
-    let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
-
-    diesel::update(
-        cart_items.filter(
-            cart_id.eq(edit_cart_id).and(item_id.eq(edit_item_id))
-        )
-    )
-    .set(quantity.eq(new_quantity))
-    .execute(&mut conn)
-    .map_err(|_| warp::reject::reject())?;
-
-    Ok(warp::reply::json(&"Cart item updated"))
+    Ok(warp::reply::json(&json!({ "message": "Item removed from cart" })))
 }

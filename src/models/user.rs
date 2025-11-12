@@ -1,4 +1,3 @@
-// User model definition
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use crate::schema::users;  
@@ -20,5 +19,3 @@ pub struct NewUser<'a> {
     pub password_hash: &'a str,
     pub email: &'a str,
 }
-
-// Add more structs as needed

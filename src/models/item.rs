@@ -1,6 +1,5 @@
-// Item model definition
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize, de};
+use serde::{Deserialize, Serialize};
 use bigdecimal::BigDecimal;  
 use crate::schema::items;  
 
@@ -10,7 +9,7 @@ pub struct Item {
     pub id: i32,
     pub name: String,
     pub description: Option<String>,
-    pub price: BigDecimal,
+    pub price: f64,
     pub stock: i32,
 }
 
@@ -19,6 +18,6 @@ pub struct Item {
 pub struct NewItem {
     pub name: String,
     pub description: Option<String>,
-    pub price: BigDecimal,
+    pub price: f64,
     pub stock: i32,
 }

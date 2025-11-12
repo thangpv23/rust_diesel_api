@@ -1,16 +1,26 @@
+// Returns impl Filter<Extract = impl Reply, Error = Rejection> + Clone
+
 use warp::Filter;
 use crate::db::connection::DbPool;
-use crate::handlers::users;
+use crate::handlers::users::*;
+use crate::routes::common::pool::filter as pool_filter;
 
 pub fn routes(pool: DbPool) -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + Clone {
-    warp::path!("users" / "register")
+    // create new user
+    let register = warp::path!("users" / "register")
         .and(warp::post())
         .and(pool_filter(pool.clone()))
         .and(warp::body::json())
-        .and_then(users::register)
-}
+        .and_then(register);
 
-// Helper to clone pool
-fn pool_filter(pool: DbPool) -> impl Filter<Extract = (DbPool,), Error = std::convert::Infallible> + Clone {
-    warp::any().map(move || pool.clone())
+    // authenticate and return JWT
+    let login = warp::path!("users" / "login")
+        .and(warp::post())
+        .and(pool_filter(pool))
+        .and(warp::body::json())
+        .and_then(login); 
+
+
+    // Combine all user routes
+    register.or(login)
 }

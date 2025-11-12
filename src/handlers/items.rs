@@ -1,4 +1,3 @@
-// Items handlers: CRUD
 use warp::{Reply, Rejection};
 use crate::db::DbPool;
 use crate::models::item::Item;
@@ -6,7 +5,7 @@ use crate::models::item::NewItem;
 use diesel::prelude::*;
 use serde::Deserialize;
 
-pub async fn create_item(pool: DbPool, body: NewItem) -> Result<impl Reply, Rejection> {
+pub async fn create_item(_user_id: i32, pool: DbPool, body: NewItem) -> Result<impl Reply, Rejection> {
     use crate::schema::items::dsl::*;
     let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
 
@@ -25,7 +24,7 @@ pub async fn create_item(pool: DbPool, body: NewItem) -> Result<impl Reply, Reje
     Ok(warp::reply::json(&"Item created"))
 }
 
-pub async fn read_item(pool: DbPool, id: i32) -> Result<impl Reply, Rejection> {
+pub async fn read_item(_user_id: i32, id: i32, pool: DbPool) -> Result<impl Reply, Rejection> {
     use crate::schema::items::dsl::*;
     let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
 
@@ -37,7 +36,7 @@ pub async fn read_item(pool: DbPool, id: i32) -> Result<impl Reply, Rejection> {
     Ok(warp::reply::json(&result))
 }
 
-pub async fn list_items(_user_id: i32, pool: DbPool) -> Result<impl Reply, Rejection> {
+pub async fn list_items(pool: DbPool) -> Result<impl Reply, Rejection> {
     use crate::schema::items::dsl::*;
     let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
 
@@ -46,7 +45,7 @@ pub async fn list_items(_user_id: i32, pool: DbPool) -> Result<impl Reply, Rejec
     Ok(warp::reply::json(&results))
 }
 
-pub async fn update_item(pool: DbPool, id: i32, body: NewItem) -> Result<impl Reply, Rejection> {
+pub async fn update_item(_user_id: i32,  id: i32, pool: DbPool, body: NewItem) -> Result<impl Reply, Rejection> {
     use crate::schema::items::dsl::*;
     let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
 
@@ -63,7 +62,7 @@ pub async fn update_item(pool: DbPool, id: i32, body: NewItem) -> Result<impl Re
     Ok(warp::reply::json(&"Item updated"))
 }
 
-pub async fn delete_item(pool: DbPool, id: i32) -> Result<impl Reply, Rejection> {
+pub async fn delete_item( _user_id: i32, id: i32, pool: DbPool) -> Result<impl Reply, Rejection> {
     use crate::schema::items::dsl::*;
     let mut conn = pool.get().map_err(|_| warp::reject::reject())?;
 

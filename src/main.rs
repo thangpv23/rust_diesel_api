@@ -14,7 +14,7 @@ mod schema;
 
 #[tokio::main]
 async fn main() {
-    dotenv().ok(); // Load environment variables
+    dotenv().ok(); 
 
     // Initialize database connection pool
     let pool = db::connection::init_pool();
@@ -22,7 +22,7 @@ async fn main() {
     // Combine routes
     let routes = routes::users::routes(pool.clone())
         .or(routes::items::routes(pool.clone()))
-        .or(routes::cart::routes(pool.clone()));
+        .or(routes::cart::routes(pool));
 
     // Start server
     let addr: SocketAddr = ([127, 0, 0, 1], 3030)
