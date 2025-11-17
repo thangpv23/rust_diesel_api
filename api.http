@@ -1,0 +1,88 @@
+# Variables
+@baseUrl = http://127.0.0.1:3030
+@token = <paste_jwt_here>
+@itemId = 1
+@quantity = 5
+
+### Register
+POST {{baseUrl}}/users/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "password123",
+  "email": "alice@example.com"
+}
+
+### Login (copy the token into @token above)
+POST {{baseUrl}}/users/login
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "password": "password123"
+}
+
+### Items: list (public)
+GET {{baseUrl}}/items
+
+### Items: create (JWT)
+POST {{baseUrl}}/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Pen",
+  "description": "Blue pen",
+  "price": 1.99,
+  "stock": 100
+}
+
+### Items: get by id (JWT)
+GET {{baseUrl}}/items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### Items: update (JWT)
+PUT {{baseUrl}}/items/{{itemId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Pen (updated)",
+  "description": "Blue gel pen",
+  "price": 2.49,
+  "stock": 120
+}
+
+### Items: delete (JWT)
+DELETE {{baseUrl}}/items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### Cart: add (JWT)
+POST {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "item_id": {{itemId}},
+  "quantity": 2
+}
+
+### Cart: view (JWT)
+GET {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### Cart: update quantity (send raw JSON number) (JWT)
+PUT {{baseUrl}}/cart/items/{{itemId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{{quantity}}
+
+### Cart: remove item (JWT)
+DELETE {{baseUrl}}/cart/items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### Cart: clear (JWT)
+DELETE {{baseUrl}}/cart
+Authorization: Bearer {{token}}

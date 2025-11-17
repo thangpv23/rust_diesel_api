@@ -12,7 +12,7 @@ diesel::table! {
 diesel::table! {
     carts (id) {
         id -> Int4,
-        user_id -> Nullable<Int4>,
+        user_id -> Int4,
     }
 }
 

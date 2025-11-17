@@ -1,5 +1,4 @@
 // Main entry point for the API server
-use std::env;
 use warp::Filter;
 use dotenv::dotenv;
 use std::net::SocketAddr;
@@ -14,6 +13,7 @@ mod schema;
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     dotenv().ok(); 
 
     // Initialize database connection pool
@@ -22,7 +22,8 @@ async fn main() {
     // Combine routes
     let routes = routes::users::routes(pool.clone())
         .or(routes::items::routes(pool.clone()))
-        .or(routes::cart::routes(pool));
+        .or(routes::cart::routes(pool))
+        .with(warp::log("api")); // Add logging
 
     // Start server
     let addr: SocketAddr = ([127, 0, 0, 1], 3030)
