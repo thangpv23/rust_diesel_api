@@ -4,10 +4,34 @@
 
 1. Install Diesel CLI: `cargo install diesel_cli --no-default-features --features postgres`
 2. Set up PostgreSQL
-3. Create and update .env
+3. Create and update .env using sample from .env.example
 4. Run migrations: `diesel migration run`
 
 ## Build and Run
+
+### Docker (recommended)
+
+Build and start all services (API + PostgreSQL):
+
+```bash
+docker-compose up --build
+```
+
+The API will be available at `http://localhost:3030`.
+
+To stop:
+
+```bash
+docker-compose down
+```
+
+To stop and remove volumes (full reset):
+
+```bash
+docker-compose down -v
+```
+
+### Local (without Docker)
 
 `cargo run`
 
