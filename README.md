@@ -5,15 +5,7 @@ Run a Rust API (Warp + Diesel + PostgreSQL) with Docker. Migrations and seed dat
 ## Quick Start (Docker)
 
 - Prerequisite: Install Docker.
-- Prepare a `.env` file at the project root. Example:
-
-```bash
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=rust_diesel
-DATABASE_URL=postgresql://postgres:postgres@postgres/rust_diesel
-JWT_SECRET=dev_change_me
-```
+- Prepare a `.env` file at the project root. Use host `postgres` for Docker (see the comments already in `.env`). See `.env.example`.
 
 Start the stack (API + DB):
 
@@ -45,6 +37,8 @@ What happens automatically:
 
 Use this path only if you are not using Docker.
 
+Tip: Switch `DATABASE_URL` in `.env` to use host `localhost` for local runs (there is a commented example in `.env`).
+
 1. Install Rust toolchain and Diesel CLI:
 
 ```powershell
@@ -54,7 +48,7 @@ cargo install diesel_cli --no-default-features --features postgres
 
 1. Start a local PostgreSQL and create a database.
 
-1. Create `.env` with a localhost URL, e.g.:
+1. Create or edit `.env` to use a localhost URL, e.g.:
 
 ```bash
 DATABASE_URL=postgresql://postgres:postgres@localhost/rust_diesel
@@ -88,3 +82,9 @@ cargo run
 
 - Seed inserts sample items only. Users should be created via `/users/register` (passwords are hashed).
 - To reseed, you can TRUNCATE items in `seeds/seed.sql` (commented line).
+
+## Switching between Docker and Local
+
+- Docker: `DATABASE_URL=...@postgres/<db>` (inside containers, the DB host is `postgres`).
+- Local: `DATABASE_URL=...@localhost/<db>` (when running `cargo run` on your machine).
+- See `.env` for commented examples; uncomment the one you need and comment the other.
