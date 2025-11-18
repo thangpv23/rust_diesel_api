@@ -1,46 +1,90 @@
 # Rust Diesel API
 
-## Setup
+Run a Rust API (Warp + Diesel + PostgreSQL) with Docker. Migrations and seed data run automatically on startup.
 
-1. Install Diesel CLI: `cargo install diesel_cli --no-default-features --features postgres`
-2. Set up PostgreSQL
-3. Create and update .env
-4. Run migrations: `diesel migration run`
+## Quick Start (Docker)
 
-## Build and Run
+- Prerequisite: Install Docker.
+- Prepare a `.env` file at the project root. Use host `postgres` for Docker (see the comments already in `.env`). See `.env.example`.
 
-`cargo run`
+Start the stack (API + DB):
 
-## Seeding Data
-
-Use the provided SQL seed to quickly populate sample items.
-
-Prerequisites:
-
-- Run migrations first: `diesel migration run`
-- PostgreSQL client (`psql`) available in your PATH
-
-Run seed (PowerShell on Windows):
-
-```
-# Uses DATABASE_URL from .env
-psql -d "postgresql://username:password@localhost/dbname" -f ".\seeds\seed.sql"
+```powershell
+docker compose up -d --build
 ```
 
-Quick data check:
+The API serves at `http://localhost:3030`.
 
+Verify quickly:
+
+```powershell
+curl http://localhost:3030/items
 ```
-psql -d "postgresql://username:password@localhost/dbname" -c "SELECT id, name, price, stock FROM items ORDER BY id;"
+
+Stop and reset:
+
+```powershell
+docker compose down
+docker compose down -v   # full reset (drops DB volume)
 ```
 
-Notes:
+What happens automatically:
 
-- The seed inserts only items. Users require hashed passwords; create users via API `/users/register` instead of raw SQL.
-- To reseed, you may uncomment the TRUNCATE line in `seeds/seed.sql`.
+- Diesel migrations run on API container start.
+- Seed file `/app/seeds/seed.sql` is executed (inserts sample items only).
+
+## Local Development (without Docker)
+
+Use this path only if you are not using Docker.
+
+Tip: Switch `DATABASE_URL` in `.env` to use host `localhost` for local runs (there is a commented example in `.env`).
+
+1. Install Rust toolchain and Diesel CLI:
+
+```powershell
+rustup toolchain install stable
+cargo install diesel_cli --no-default-features --features postgres
+```
+
+1. Start a local PostgreSQL and create a database.
+
+1. Create or edit `.env` to use a localhost URL, e.g.:
+
+```bash
+DATABASE_URL=postgresql://postgres:postgres@localhost/rust_diesel
+JWT_SECRET=dev_change_me
+```
+
+1. Run migrations:
+
+```powershell
+diesel migration run
+```
+
+1. Seed data (optional):
+
+```powershell
+psql "$env:DATABASE_URL" -f .\seeds\seed.sql
+```
+
+1. Run the API:
+
+```powershell
+cargo run
+```
 
 ## API Reference
 
-- Simple HTTP requests file: `api.http` (open in VS Code; each block is runnable)
-  - **Recommended:** Install [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension for syntax highlighting and "Send Request" buttons
+- Requests collection: `api.http` (use VS Code + REST Client extension)
+- Protected endpoints require `Authorization: Bearer <token>`.
 
-Note: Protected endpoints require header `Authorization: Bearer <token>`.
+## Notes on Seeding
+
+- Seed inserts sample items only. Users should be created via `/users/register` (passwords are hashed).
+- To reseed, you can TRUNCATE items in `seeds/seed.sql` (commented line).
+
+## Switching between Docker and Local
+
+- Docker: `DATABASE_URL=...@postgres/<db>` (inside containers, the DB host is `postgres`).
+- Local: `DATABASE_URL=...@localhost/<db>` (when running `cargo run` on your machine).
+- See `.env` for commented examples; uncomment the one you need and comment the other.

@@ -1,6 +1,5 @@
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
-use bigdecimal::BigDecimal;  
 use crate::schema::items;  
 
 #[derive(Queryable, Serialize, Deserialize)]

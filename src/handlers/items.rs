@@ -3,7 +3,6 @@ use crate::db::DbPool;
 use crate::models::item::Item;
 use crate::models::item::NewItem;
 use diesel::prelude::*;
-use serde::Deserialize;
 
 pub async fn create_item(_user_id: i32, pool: DbPool, body: NewItem) -> Result<impl Reply, Rejection> {
     use crate::schema::items::dsl::*;

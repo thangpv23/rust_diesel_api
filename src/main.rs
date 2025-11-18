@@ -26,7 +26,7 @@ async fn main() {
         .with(warp::log("api")); // Add logging
 
     // Start server
-    let addr: SocketAddr = ([127, 0, 0, 1], 3030)
+    let addr: SocketAddr = ([0, 0, 0, 0], 3030)
         .into();
     println!("Server is running at http://{}", addr);
     warp::serve(routes).run(addr).await;
