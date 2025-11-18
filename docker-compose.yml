@@ -28,8 +28,7 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
-    volumes:
-      - ./seeds:/app/seeds:ro
+
     ports:
       - "3030:3030"
     depends_on:
@@ -37,8 +36,8 @@ services:
         condition: service_healthy
     command: >
       sh -c "
-        apt-get update && apt-get install -y curl && \
         diesel migration run && \
+        psql \"$DATABASE_URL\" -f /app/seeds/seed.sql && \
         /app/rust_diesel_api
       "
 

@@ -23,9 +23,10 @@ RUN cargo build --release
 # Runtime stage
 FROM debian:bookworm-slim
 
-# Install PostgreSQL client and SSL libraries
+# Install PostgreSQL client (psql) and SSL libraries
 RUN apt-get update && apt-get install -y \
     libpq5 \
+    postgresql-client \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -39,6 +40,9 @@ COPY --from=builder /usr/local/cargo/bin/diesel /usr/local/bin/diesel
 
 # Copy migrations
 COPY migrations ./migrations
+
+# Copy seeds
+COPY seeds ./seeds
 
 # Expose port
 EXPOSE 3030
